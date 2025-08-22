@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "4100:4100"
+    volumes:
+      - ./backend:/app
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: <<EOF
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json package-lock.json* /app/
+RUN npm install --production || true
+COPY . /app
+EXPOSE 3100
+CMD ["npx","parcel","src/index.html","--port","3100"]
+EOF
+    ports:
+      - "3100:3100"
+  ai:
+    build:
+      context: ./ai
+      dockerfile: <<EOF
+FROM python:3.10-slim
+WORKDIR /app
+COPY popup_filter.py /app/
+RUN pip install flask
+EXPOSE 5200
+CMD ["python","popup_filter.py"]
+EOF
+    ports:
+      - "5200:5200"

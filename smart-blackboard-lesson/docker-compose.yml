@@ -1,0 +1,35 @@
+version: '3.8'
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: <<EOF
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json package-lock.json* /app/
+RUN npm install --production || true
+COPY . /app
+EXPOSE 3000
+CMD ["npm","start"]
+EOF
+    ports:
+      - "3000:3000"
+  ai:
+    build:
+      context: ./ai
+      dockerfile: <<EOF
+FROM python:3.10-slim
+WORKDIR /app
+COPY grammar_checker.py /app/
+RUN pip install flask
+EXPOSE 5001
+CMD ["python","grammar_checker.py"]
+EOF
+    ports:
+      - "5001:5001"
